@@ -1,0 +1,90 @@
+version: '3.3'
+
+networks:
+  miniprova:
+    # driver: bridge
+    # ipam:
+    #  config:
+    #    - subnet: 172.28.0.0/16
+
+            
+
+
+services:
+  postgres_db:
+    image: postgres:15.1-alpine
+    networks:
+      - miniprova
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: "postgres -c shared_preload_libraries=pg_stat_statements -c max_connections=100 -c shared_buffers=256MB -c synchronous_commit=off -c fsync=off -c full_page_writes=off"
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker-data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+  zuul-server:
+    build: ./zuul-server
+    networks:
+      - miniprova
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    links:
+      - eureka-server
+      - auth
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - miniprova
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  auth:
+    build: ./auth
+    ports:
+      - 3000:3000
+    networks:
+      - miniprova
+    environment:
+      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/auth
+      - JWT_SECRET=f1ce94ef913c6ec52ad9ed48cdae9c2a4829a95e0812d117509860fbe0784a8f
+      - PORT=3000
+      - EUREKA_HOSTNAME=eureka-server
+      - EUREKA_PORT=8761
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
