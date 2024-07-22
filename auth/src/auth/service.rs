@@ -6,7 +6,7 @@ use super::{
 };
 
 pub fn login(login: LoginUserInputDto) -> Result<LoginUserOutputDto, ServiceError> {
-    let user = user::repository::get_user_by_email(&login.email)
+    let user = user::repository::get_user_by_email_with_roles_and_avatar(&login.email)
         .map_err(|_| ServiceError::InternalServerError)?;
     if user.is_none() {
         return Err(ServiceError::BadRequest(
@@ -22,6 +22,6 @@ pub fn login(login: LoginUserInputDto) -> Result<LoginUserOutputDto, ServiceErro
         ));
     }
 
-    let token = crypto::generate_token(user.id)?;
+    let token = crypto::generate_token(user.id, user.roles, user.name, user.avatar)?;
     Ok(LoginUserOutputDto { token })
 }

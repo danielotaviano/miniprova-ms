@@ -43,7 +43,12 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 web::scope("/users")
-                    .service(web::resource("").post(user::controller::create_user))
+                    .service(
+                        web::resource("")
+                            .wrap(middleware::RoleMiddleware(vec![ADMIN]))
+                            .wrap(middleware::AuthMiddleware)
+                            .get(user::controller::list_users),
+                    )
                     .service(
                         web::resource("/{user_id}/roles")
                             .wrap(middleware::RoleMiddleware(vec![ADMIN]))
@@ -61,6 +66,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
             .service(web::resource("/login").post(auth::controller::login))
+            .service(web::resource("/register").post(user::controller::create_user))
     })
     .bind(("0.0.0.0", service_port))?
     .run();

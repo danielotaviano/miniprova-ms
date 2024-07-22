@@ -70,7 +70,7 @@ where
         .last()
         .unwrap();
 
-        let user_id = match auth::crypto::decode_token(jwt) {
+        let user = match auth::crypto::decode_token(jwt) {
             Ok(user_id) => user_id,
             Err(e) => {
                 return Box::pin(async {
@@ -80,31 +80,8 @@ where
             }
         };
 
-        let user = match user::service::get_user_with_roles_by_id(user_id) {
-            Ok(user) => user,
-            Err(e) => {
-                return Box::pin(async {
-                    let res = req.error_response(e);
-                    Ok(res)
-                });
-            }
-        };
-
-        match user {
-            Some(user) => {
-                let logged_user = LoggedUser {
-                    id: user.id,
-                    roles: user.roles,
-                };
-                req.extensions_mut().insert(logged_user);
-            }
-            None => {
-                return Box::pin(async {
-                    let res = req.error_response(ServiceError::Unauthorized);
-                    Ok(res)
-                });
-            }
-        }
+        let logged_user = LoggedUser { id: user.sub };
+        req.extensions_mut().insert(logged_user);
 
         let fut = self.service.call(req);
 
@@ -157,12 +134,15 @@ where
         {
             let ext = req.extensions();
             let logged_user = ext.get::<LoggedUser>().unwrap();
+            let db_user = user::service::get_user_with_roles_by_id(logged_user.id).unwrap();
 
-            has_role = logged_user
-                .roles
-                .iter()
-                .any(|role| self.role.contains(role))
-                || logged_user.roles.contains(&RoleEnum::ADMIN);
+            has_role = match db_user {
+                Some(user) => {
+                    user.roles.iter().any(|role| self.role.contains(role))
+                        || user.roles.contains(&RoleEnum::ADMIN)
+                }
+                None => false,
+            };
         }
 
         let fut: <S as Service<ServiceRequest>>::Future = match has_role {

@@ -4,6 +4,15 @@ use crate::role::enm::RoleEnum;
 
 use super::model::User;
 
+#[derive(Serialize)]
+pub struct UserResponse {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub roles: Vec<RoleEnum>,
+    pub avatar: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateUserInputDto {
     pub name: String,
@@ -52,4 +61,14 @@ pub struct UserWithRolesOutputDto {
     pub name: String,
     pub email: String,
     pub roles: Vec<RoleEnum>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserWithRolesAndAvatarOutputDto {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub password: String,
+    pub roles: Vec<RoleEnum>,
+    pub avatar: Option<String>,
 }
