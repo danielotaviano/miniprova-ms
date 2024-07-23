@@ -1,0 +1,55 @@
+'use client';
+
+import { CardContent } from '@/components/ui/card';
+import { auth } from '@/lib/auth';
+import { Role } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { QuestionsTable } from './questions-table';
+import { Button } from '@/components/ui/button';
+import { File, PlusCircle, X } from 'lucide-react';
+import QuestionForm from '@/components/ui/question-form';
+
+export default function QuestionsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => setIsModalOpen(!isModalOpen);
+  useEffect(() => {
+    async () => {
+      const rolesWithAccess = [Role.ADMIN, Role.TEACHER];
+      const session = await auth();
+
+      if (!session?.user.roles.some((role) => rolesWithAccess.includes(role))) {
+        window.location.href = '/';
+      }
+    };
+  }, []);
+
+  return (
+    <>
+      <div className="ml-auto flex items-center gap-2">
+        <Button size="sm" className="h-8 gap-1" onClick={toggleModal}>
+          <PlusCircle className="h-3.5 w-3.5" />
+          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            Add Question
+          </span>
+        </Button>
+      </div>
+      {isModalOpen && (
+        <div className="fixed inset-y-36 inset-x-[45rem] z-50 flex items-start justify-start border border-gray-200 bg-white rounded-lg shadow-lg p-4">
+          <div
+            className="absolute top-0 right-0 p-4 cursor-pointer"
+            onClick={toggleModal}
+          >
+            <X />
+          </div>
+          <div className="mt-5">
+            <QuestionForm />
+          </div>
+        </div>
+      )}
+      <CardContent>
+        <QuestionsTable />
+      </CardContent>
+    </>
+  );
+}

@@ -71,8 +71,6 @@ export default async function DashboardLayout({
               roles={session?.user?.roles ?? []}
               menuRoleMap={menuRoleMap}
             />
-            <DashboardBreadcrumb />
-            <SearchInput />
             <User />
           </header>
           <main className="grid flex-1 items-start gap-2 p-4 sm:px-6 sm:py-0 md:gap-4 bg-muted/40">

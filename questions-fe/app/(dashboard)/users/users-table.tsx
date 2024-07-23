@@ -16,18 +16,14 @@ import {
 } from '@/components/ui/table';
 
 import { getUsers, UserApi } from '@/lib/api';
-import { User } from './user';
 import { useEffect, useState } from 'react';
-import { auth } from '@/lib/auth';
-import { Role } from '@/lib/utils';
+import { User } from './user';
 
 export function UsersTable({}: {}) {
   const [users, setUsers] = useState<UserApi[]>([]);
 
   useEffect(() => {
     (async () => {
-      const session = await auth();
-      if (!session?.user.roles.includes(Role.ADMIN)) window.location.href = '/';
       getUsers().then((users) => {
         console.log(users);
         setUsers(users);
