@@ -1,8 +1,8 @@
 use crate::errors::ServiceError;
 
 use super::{
-    dto::CreateQuestionInputDto,
-    models::{Answer, Question},
+    dto::{CreateQuestionInputDto, QuestionWithAnswersDto},
+    models::Question,
     repository,
 };
 
@@ -35,7 +35,9 @@ pub fn create_question(new_question: CreateQuestionInputDto) -> Result<(), Servi
     Ok(())
 }
 
-pub fn get_question_by_id(question_id: i32) -> Result<Option<Question>, ServiceError> {
+pub fn get_question_by_id(
+    question_id: i32,
+) -> Result<Option<QuestionWithAnswersDto>, ServiceError> {
     repository::get_question_by_id(question_id)
 }
 
@@ -51,15 +53,14 @@ pub fn delete_question_by_id(question_id: i32) -> Result<(), ServiceError> {
     Ok(())
 }
 
-pub fn list_answers_by_question_id(question_id: i32) -> Result<Vec<Answer>, ServiceError> {
-    repository::list_answers_by_question_id(question_id)
-}
-
 pub fn list_questions() -> Result<Vec<Question>, ServiceError> {
     repository::list_questions()
 }
 
-pub fn update_question(question_id: i32, new_question: CreateQuestionInputDto) -> Result<(), ServiceError> {
+pub fn update_question(
+    question_id: i32,
+    new_question: CreateQuestionInputDto,
+) -> Result<(), ServiceError> {
     if new_question.answers.is_empty() {
         return Err(ServiceError::BadRequest(
             "Must have at least 1 answer".to_string(),

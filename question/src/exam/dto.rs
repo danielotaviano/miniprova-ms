@@ -2,11 +2,19 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+pub struct CreatelInputDto {
+    pub name: String,
+}
+#[derive(Serialize, Deserialize)]
 pub struct CreateExamInputDto {
     pub name: String,
-    pub start_date: NaiveDateTime,
-    pub end_date: NaiveDateTime,
-    pub class_id: i32,
+    pub questions: Vec<i32>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UpdateExamInputDto {
+    pub name: String,
+    pub questions: Vec<i32>,
 }
 
 impl CreateExamInputDto {
@@ -15,12 +23,16 @@ impl CreateExamInputDto {
             return Err("Name is required".to_string());
         }
 
-        if self.start_date >= self.end_date {
-            return Err("Start date must be before end date".to_string());
-        }
-
         Ok(())
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GetExamWithQuestionCountDto {
+    pub id: i32,
+    pub name: String,
+    pub created_at: NaiveDateTime,
+    pub question_count: i64,
 }
 
 #[derive(Serialize, Deserialize)]

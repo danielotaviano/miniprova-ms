@@ -37,15 +37,6 @@ pub async fn delete_question_by_id(question_id: web::Path<i32>) -> impl Responde
     }
 }
 
-pub async fn list_answers_by_question_id(question_id: web::Path<i32>) -> impl Responder {
-    let answers = match service::list_answers_by_question_id(question_id.into_inner()) {
-        Err(e) => return HttpResponse::from_error(e),
-        Ok(answers) => answers,
-    };
-
-    HttpResponse::Ok().json(answers).into()
-}
-
 pub async fn list_questions() -> impl Responder {
     let questions = match service::list_questions() {
         Err(e) => return HttpResponse::from_error(e),

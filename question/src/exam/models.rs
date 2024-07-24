@@ -13,6 +13,7 @@ pub struct Exam {
 
 #[derive(Insertable)]
 #[diesel(table_name = exams)]
+
 pub struct NewExam {
     pub name: String,
 }

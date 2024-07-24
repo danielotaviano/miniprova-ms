@@ -2,7 +2,11 @@ use actix_web::{web, HttpResponse, Responder};
 
 use crate::errors::ServiceError;
 
-use super::{dto::CreateExamInputDto, models::UpdateExam, service};
+use super::{
+    dto::{CreateExamInputDto, UpdateExamInputDto},
+    models::UpdateExam,
+    service,
+};
 
 pub async fn create_exam(input: web::Json<CreateExamInputDto>) -> impl Responder {
     match input.validate() {
@@ -16,6 +20,13 @@ pub async fn create_exam(input: web::Json<CreateExamInputDto>) -> impl Responder
     };
 
     HttpResponse::Created().json(exam).into()
+}
+
+pub async fn get_exams() -> impl Responder {
+    match service::get_exams() {
+        Err(e) => HttpResponse::from_error(e),
+        Ok(exams) => HttpResponse::Ok().json(exams).into(),
+    }
 }
 
 pub async fn get_exam_by_id(path: web::Path<i32>) -> impl Responder {
@@ -38,10 +49,18 @@ pub async fn delete_exam(path: web::Path<i32>) -> impl Responder {
     }
 }
 
-pub async fn update_exam(path: web::Path<i32>, input: web::Json<UpdateExam>) -> impl Responder {
+pub async fn update_exam(
+    path: web::Path<i32>,
+    input: web::Json<UpdateExamInputDto>,
+) -> impl Responder {
     let exam_id = path.into_inner();
+    let name = input.name.clone();
 
-    let exam = match service::update_exam(exam_id, input.into_inner()) {
+    let exam = match service::update_exam(
+        exam_id,
+        UpdateExam { name: Some(name) },
+        input.questions.clone(),
+    ) {
         Err(e) => return HttpResponse::from_error(e),
         Ok(exam) => exam,
     };

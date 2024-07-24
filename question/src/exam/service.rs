@@ -1,36 +1,36 @@
 use crate::{errors::ServiceError, question};
 
 use super::{
-    dto::CreateExamInputDto,
+    dto::{CreateExamInputDto, GetExamWithQuestionCountDto},
     models::{Exam, NewExam, UpdateExam},
     repository,
 };
 
 pub fn create_exam(new_exam: CreateExamInputDto) -> Result<Exam, ServiceError> {
-    if new_exam.start_date > new_exam.end_date {
-        return Err(ServiceError::BadRequest(
-            "End date must be after start date".to_string(),
-        ));
-    }
-
-    if new_exam.start_date < chrono::Utc::now().naive_utc() {
-        return Err(ServiceError::BadRequest(
-            "Start date must be in the future".to_string(),
-        ));
-    }
-
-    let exam = repository::create_exam(NewExam {
-        name: new_exam.name,
-    })?;
+    let exam = repository::create_exam(
+        NewExam {
+            name: new_exam.name,
+        },
+        new_exam.questions,
+    )?;
     Ok(exam)
 }
 
-pub fn get_exam_by_id(exam_id: i32) -> Result<Option<Exam>, ServiceError> {
+pub fn get_exams() -> Result<Vec<GetExamWithQuestionCountDto>, ServiceError> {
+    let exams = repository::get_exams()?;
+    Ok(exams)
+}
+
+pub fn get_exam_by_id(exam_id: i32) -> Result<Option<GetExamWithQuestionCountDto>, ServiceError> {
     let exam = repository::get_exam_by_id(exam_id)?;
     Ok(exam)
 }
 
-pub fn update_exam(exam_id: i32, new_exam: UpdateExam) -> Result<Exam, ServiceError> {
+pub fn update_exam(
+    exam_id: i32,
+    new_exam: UpdateExam,
+    questions: Vec<i32>,
+) -> Result<Exam, ServiceError> {
     let existing = repository::get_exam_by_id(exam_id)?;
 
     if existing.is_none() {
@@ -38,6 +38,7 @@ pub fn update_exam(exam_id: i32, new_exam: UpdateExam) -> Result<Exam, ServiceEr
     }
 
     let exam = repository::update_exam(exam_id, new_exam)?;
+    repository::update_questions_in_exam(exam_id, questions)?;
     Ok(exam)
 }
 

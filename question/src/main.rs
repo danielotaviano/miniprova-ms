@@ -36,39 +36,34 @@ async fn main() -> std::io::Result<()> {
                     .wrap(middleware::RoleMiddleware(vec![TEACHER]))
                     .wrap(middleware::Authentication)
                     .service(
-                        web::resource("")
-                            .post(question::controller::create_question)
-                            .get(question::controller::list_questions),
-                    )
-                    .service(
                         web::resource("/{question_id}")
                             .get(question::controller::get_question_by_id)
                             .delete(question::controller::delete_question_by_id)
                             .patch(question::controller::update_question_by_id),
                     )
                     .service(
-                        web::resource("/{question_id}/answers")
-                            .get(question::controller::list_answers_by_question_id),
+                        web::resource("")
+                            .post(question::controller::create_question)
+                            .get(question::controller::list_questions),
                     ),
             )
             .service(
                 web::scope("/exams")
+                    .wrap(middleware::RoleMiddleware(vec![TEACHER]))
                     .wrap(middleware::Authentication)
                     .service(
                         web::resource("")
-                            .wrap(middleware::RoleMiddleware(vec![TEACHER]))
+                            .get(exam::controller::get_exams)
                             .post(exam::controller::create_exam),
                     )
                     .service(
                         web::resource("/{exam_id}")
-                            .wrap(middleware::RoleMiddleware(vec![TEACHER]))
                             .get(exam::controller::get_exam_by_id)
                             .delete(exam::controller::delete_exam)
                             .patch(exam::controller::update_exam),
                     )
                     .service(
                         web::resource("/{exam_id}/questions")
-                            .wrap(middleware::RoleMiddleware(vec![TEACHER]))
                             .post(exam::controller::update_questions_in_exam)
                             .get(exam::controller::get_exam_questions),
                     ),

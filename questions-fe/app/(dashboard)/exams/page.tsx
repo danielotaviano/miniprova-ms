@@ -7,9 +7,10 @@ import { auth } from '@/lib/auth';
 import { Role } from '@/lib/utils';
 import { PlusCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { QuestionsTable } from './questions-table';
+import { ExamsTable } from './exams-table';
+import ExamForm from '@/components/ui/exam-form';
 
-export default function QuestionsPage() {
+export default function ExamsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -30,7 +31,7 @@ export default function QuestionsPage() {
         <Button size="sm" className="h-8 gap-1" onClick={toggleModal}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Add Question
+            Add Exam
           </span>
         </Button>
       </div>
@@ -42,13 +43,13 @@ export default function QuestionsPage() {
           >
             <X />
           </div>
-          <div className="mt-5">
-            <QuestionForm />
+          <div className="flex items-center justify-center w-full">
+            <ExamForm />
           </div>
         </div>
       )}
       <CardContent>
-        <QuestionsTable />
+        <ExamsTable />
       </CardContent>
     </>
   );

@@ -1,7 +1,7 @@
 use crate::diesel::OptionalExtension;
 use std::error::Error;
 
-use diesel::{query_dsl::methods::FilterDsl, Connection, ExpressionMethods, RunQueryDsl};
+use diesel::{Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     db::DB_MANAGER,
@@ -11,7 +11,7 @@ use crate::{
 };
 
 use super::{
-    dto::CreateQuestionInputDto,
+    dto::{AnswerDto, CreateQuestionInputDto, QuestionWithAnswersDto},
     models::{NewAnswer, NewQuestion, Question},
 };
 
@@ -48,13 +48,38 @@ pub fn create_question(new_question: CreateQuestionInputDto) -> Result<(), Servi
     Ok(())
 }
 
-pub fn get_question_by_id(question_id: i32) -> Result<Option<Question>, ServiceError> {
+pub fn get_question_by_id(
+    question_id: i32,
+) -> Result<Option<QuestionWithAnswersDto>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let question = questions::table
         .filter(questions::id.eq(question_id))
         .first::<Question>(&mut conn)
         .optional()
         .map_err(|_| ServiceError::InternalServerError)?;
+
+    let question = match question {
+        Some(q) => {
+            let answers: Vec<Answer> = answers::table
+                .filter(answers::question_id.eq(q.id))
+                .load::<Answer>(&mut conn)
+                .map_err(|_| ServiceError::InternalServerError)?;
+
+            Some(QuestionWithAnswersDto {
+                id: q.id,
+                question: q.question,
+                answers: answers
+                    .into_iter()
+                    .map(|a| AnswerDto {
+                        answer: a.answer,
+                        id: a.id,
+                        is_correct: Some(a.is_correct),
+                    })
+                    .collect(),
+            })
+        }
+        None => None,
+    };
 
     Ok(question)
 }
@@ -112,19 +137,10 @@ pub fn update_question(
     Ok(())
 }
 
-pub fn list_answers_by_question_id(question_id: i32) -> Result<Vec<Answer>, ServiceError> {
-    let mut conn = DB_MANAGER.lock().unwrap().get_database();
-    let answers = answers::table
-        .filter(answers::question_id.eq(question_id))
-        .load::<Answer>(&mut conn)
-        .map_err(|_| ServiceError::InternalServerError)?;
-
-    Ok(answers)
-}
-
 pub fn list_questions() -> Result<Vec<Question>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let questions = questions::table
+        .order_by(questions::id)
         .load::<Question>(&mut conn)
         .map_err(|_| ServiceError::InternalServerError)?;
 
