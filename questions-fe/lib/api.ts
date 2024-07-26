@@ -44,6 +44,117 @@ export interface CreateQuestionApi {
   }[];
 }
 
+export interface CreateClassApi {
+  name: string;
+  description: string;
+  code: string;
+}
+
+export interface UpdateClassApi {
+  name: string;
+  description: string;
+}
+
+export interface ClassByTeacherApi {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+}
+
+export const getClassesByTeacher = async (): Promise<ClassByTeacherApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/teachers`, {
+    headers: {
+      Authorization: `Bearer ${session.user.jwt}`
+    }
+  });
+  return res.json();
+};
+
+export const updateClassByTeacher = async (
+  id: number,
+  classByTeacher: UpdateClassApi
+): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(classByTeacher),
+    headers: {
+      Authorization: `Bearer ${session.user.jwt}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  return res.ok;
+};
+
+export const getClassById = async (id: number): Promise<ClassByTeacherApi> => {
+  const session = await auth();
+
+  if (!session) {
+    throw new Error('dont found a session');
+  }
+
+  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${session.user.jwt}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  return res.json();
+};
+
+export const createClassByTeacher = async (
+  classByTeacher: CreateClassApi
+): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes`, {
+    method: 'POST',
+    body: JSON.stringify(classByTeacher),
+    headers: {
+      Authorization: `Bearer ${session.user.jwt}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  return res.ok;
+};
+
+export const deleteClassByTeacher = async (id: number): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${session.user.jwt}`
+    }
+  });
+
+  return res.ok;
+};
+
 export const getUsers = async (): Promise<UserApi[]> => {
   const session = await auth();
 
