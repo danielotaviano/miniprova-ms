@@ -7,7 +7,7 @@ use crate::{
     user::{dto::CreateUserInputDto, service},
 };
 
-use super::dto::UserResponse;
+use super::dto::{MeResponse, UserResponse};
 
 pub async fn create_user(new_user: web::Json<CreateUserInputDto>) -> impl Responder {
     if let Err(e) = new_user.validate() {
@@ -43,18 +43,26 @@ pub async fn me(req: actix_web::HttpRequest) -> impl Responder {
         None => return HttpResponse::from_error(ServiceError::Unauthorized),
     };
 
+    let jwt = req
+        .headers()
+        .get("Authorization")
+        .unwrap()
+        .to_str()
+        .unwrap();
+
     if user.is_none() {
         return HttpResponse::from_error(ServiceError::Unauthorized);
     }
 
     let user = user.unwrap();
 
-    let formatted_user: UserResponse = UserResponse {
+    let formatted_user: MeResponse = MeResponse {
         avatar: user.avatar,
         email: user.email,
         id: user.id,
         name: user.name,
         roles: user.roles,
+        jwt: jwt.to_string(),
     };
 
     HttpResponse::Ok().json(formatted_user).into()

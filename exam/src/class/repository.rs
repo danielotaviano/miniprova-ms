@@ -1,7 +1,10 @@
+use chrono::{DateTime, Utc};
 use diesel::{ExpressionMethods, RunQueryDsl, SelectableHelper, Table};
 
+use crate::schema;
 use crate::{db::DB_MANAGER, errors::ServiceError, schema::classes_students};
 
+use super::dto::AddExamToClassDto;
 use super::model::{Class, NewClass, UpdateClass};
 use crate::diesel::OptionalExtension;
 use crate::diesel::QueryDsl;
@@ -16,6 +19,24 @@ pub fn create_class(new_class: NewClass) -> Result<Class, ServiceError> {
         .map_err(|_| ServiceError::InternalServerError)?;
 
     Ok(class)
+}
+
+pub fn add_exam_to_class(cid: i32, exam: AddExamToClassDto) -> Result<(), ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+    diesel::insert_into(schema::class_exams::table)
+        .values((
+            schema::class_exams::class_id.eq(cid),
+            schema::class_exams::exam_id.eq(exam.exam_id),
+            schema::class_exams::start_time.eq(exam.start_date.naive_utc()),
+            schema::class_exams::end_time.eq(exam.end_date.naive_utc()),
+        ))
+        .execute(&mut conn)
+        .map_err(|e| {
+            println!("Error: {:?}", e);
+            ServiceError::InternalServerError
+        })?;
+
+    Ok(())
 }
 
 pub fn get_class_by_id(class_id: i32) -> Result<Option<Class>, ServiceError> {

@@ -13,6 +13,16 @@ pub struct UserResponse {
     pub avatar: Option<String>,
 }
 
+#[derive(Serialize)]
+pub struct MeResponse {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub roles: Vec<RoleEnum>,
+    pub avatar: Option<String>,
+    pub jwt: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateUserInputDto {
     pub name: String,

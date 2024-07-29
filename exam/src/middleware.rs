@@ -58,6 +58,7 @@ where
     dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        println!("entrei aqui ow no call");
         let svc = self.service.clone();
 
         Box::pin(async move {
@@ -84,20 +85,25 @@ where
                 .send()
                 .await;
 
+            println!("123123");
             let response = match user_result {
                 Ok(r) => r,
                 Err(_) => return Err(Error::from(ServiceError::InternalServerError)),
             };
+            println!("asd");
 
             let user: Option<LoggedUser> = match response.json().await {
                 Ok(u) => u,
                 Err(_) => return Err(Error::from(ServiceError::InternalServerError)),
             };
 
+            println!("user: {:?}", user);
+
             let user = match user {
                 Some(u) => u,
                 None => return Err(Error::from(ServiceError::Unauthorized)),
             };
+
             req.extensions_mut().insert(user);
 
             let res = svc.call(req).await?;

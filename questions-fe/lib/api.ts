@@ -62,6 +62,95 @@ export interface ClassByTeacherApi {
   description: string;
 }
 
+export interface StudentClassApi {
+  id: number;
+  name: String;
+  code: String;
+  description: String;
+  user_id: number;
+}
+
+export interface ExamToDoApi {
+  exam_name: string;
+  start_time: string;
+  end_time: string;
+  class_name: string;
+}
+
+export const getExamsToDo = async (): Promise<ExamToDoApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/student/open`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
+export const getUnrolledClasses = async (): Promise<StudentClassApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/classes/students/unenrolled`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
+export const getEnrolledClasses = async (): Promise<StudentClassApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/classes/students/enrolled`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
+export const enrollClass = async (id: number): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/classes/${id}/enroll`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+
+  return res.ok;
+};
+
 export const getClassesByTeacher = async (): Promise<ClassByTeacherApi[]> => {
   const session = await auth();
 
@@ -399,4 +488,46 @@ export const getExams = async (): Promise<ExamApi[]> => {
     }
   });
   return res.json();
+};
+
+export const addExamToClass = async (
+  classId: number,
+  examId: number,
+  startDate: string,
+  endDate: string
+): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  console.log(
+    JSON.stringify({
+      exam_id: examId,
+      start_date: startDate,
+      end_date: endDate,
+      class_id: classId
+    })
+  );
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/classes/${classId}/exams`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        exam_id: examId,
+        start_date: startDate,
+        end_date: endDate
+      })
+    }
+  );
+
+  console.log(res);
+
+  return res.ok;
 };

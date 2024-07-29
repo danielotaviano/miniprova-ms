@@ -2,10 +2,10 @@ version: '3.3'
 
 networks:
   miniprova:
-    # driver: bridge
-    # ipam:
-    #  config:
-    #    - subnet: 172.28.0.0/16
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.28.0.0/16
 
             
 
@@ -54,6 +54,8 @@ services:
     links:
       - eureka-server
       - auth
+      - exam
+      - question
   eureka-server:
     build: ./eureka-server
     ports:
@@ -67,8 +69,6 @@ services:
       retries: 3
   auth:
     build: ./auth
-    ports:
-      - 3000:3000
     networks:
       - miniprova
     environment:
@@ -77,6 +77,8 @@ services:
       - PORT=3000
       - EUREKA_HOSTNAME=eureka-server
       - EUREKA_PORT=8761
+      - HOSTNAME=auth
+      - GATEWAY_URL=http://zuul-server:8080
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -87,4 +89,45 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  
+  question:
+    build: ./question
+    networks:
+      - miniprova
+    environment:
+      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/questions
+      - PORT=3000
+      - EUREKA_HOSTNAME=eureka-server
+      - EUREKA_PORT=8761
+      - HOSTNAME=question
+      - GATEWAY_URL=http://zuul-server:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  exam:
+    build: ./exam
+    networks:
+      - miniprova
+    environment:
+      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/exams
+      - PORT=3000
+      - EUREKA_HOSTNAME=eureka-server
+      - EUREKA_PORT=8761
+      - HOSTNAME=exam
+      - GATEWAY_URL=http://zuul-server:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

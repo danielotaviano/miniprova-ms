@@ -1,7 +1,11 @@
-use crate::errors::ServiceError;
+use crate::{
+    api::{self, GetExamApi},
+    auth::models::LoggedUser,
+    errors::ServiceError,
+};
 
 use super::{
-    dto::{CreateClassInputDto, UpdateClassInputDto},
+    dto::{AddExamToClassDto, CreateClassInputDto, UpdateClassInputDto},
     model::{Class, NewClass, UpdateClass},
     repository,
 };
@@ -127,4 +131,23 @@ pub fn is_student_enrolled(class_id: i32, student_id: i32) -> Result<bool, Servi
     let is_enrolled = repository::is_student_enrolled(class_id, student_id)?;
 
     Ok(is_enrolled)
+}
+
+pub async fn add_exam_to_class(
+    class_id: i32,
+    exam: AddExamToClassDto,
+    user: &LoggedUser,
+) -> Result<(), ServiceError> {
+    let class = repository::get_class_by_id(class_id)?;
+
+    if class.is_none() {
+        return Err(ServiceError::BadRequest("Class not found".to_string()));
+    }
+
+    let _ = api::get_exam(exam.exam_id, user.jwt.clone()).await?;
+
+    repository::add_exam_to_class(class_id, exam)?;
+
+    println!("e aq?");
+    Ok(())
 }

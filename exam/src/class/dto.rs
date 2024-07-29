@@ -1,4 +1,12 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddExamToClassDto {
+    pub exam_id: i32,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateClassInputDto {

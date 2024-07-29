@@ -13,7 +13,9 @@ pub fn init_eureka(
     config.instance.ip_addr = local_ip().unwrap().to_string();
     config.instance.port = Some(PortData::new(instance_port, true));
     config.instance.app = "auth".to_string();
-    config.instance.host_name = hostname;
+    config.instance.host_name = hostname.clone();
+    config.instance.vip_address = hostname.clone();
+    config.instance.secure_vip_address = hostname.clone();
     let eureka = EurekaClient::new(config);
     eureka.start();
     eureka

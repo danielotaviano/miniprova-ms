@@ -1,4 +1,4 @@
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer};
 use db::DB_MANAGER;
 use dotenvy::dotenv;
 use eureka::init_eureka;
@@ -31,6 +31,10 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::new("%a %{User-Agent}i"))
+            .service(
+                web::resource("/health")
+                    .to(|| async { HttpResponse::Ok().body("Service is up and running") }),
+            )
             .service(
                 web::scope("/questions")
                     .wrap(middleware::RoleMiddleware(vec![TEACHER]))

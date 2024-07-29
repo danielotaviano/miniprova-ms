@@ -7,4 +7,5 @@ use crate::role::enm::RoleEnum;
 pub struct LoggedUser {
     pub id: i32,
     pub roles: Vec<RoleEnum>,
+    pub jwt: String,
 }

@@ -3,7 +3,7 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Responder};
 use crate::{auth::models::LoggedUser, errors::ServiceError};
 
 use super::{
-    dto::{CreateClassInputDto, UpdateClassInputDto},
+    dto::{AddExamToClassDto, CreateClassInputDto, UpdateClassInputDto},
     service,
 };
 
@@ -107,8 +107,11 @@ pub async fn list_classes_that_student_is_not_enrolled(req: HttpRequest) -> impl
 }
 
 pub async fn list_classes_by_teacher(req: HttpRequest) -> impl Responder {
+    println!("entrou aqui");
     let ext = req.extensions();
     let user = ext.get::<LoggedUser>().unwrap();
+
+    println!("user: {:?}", user);
 
     let classes = match service::list_classes_by_teacher(user.id) {
         Err(e) => return HttpResponse::from_error(e),
@@ -116,4 +119,19 @@ pub async fn list_classes_by_teacher(req: HttpRequest) -> impl Responder {
     };
 
     HttpResponse::Ok().json(classes).into()
+}
+
+pub async fn add_exam_to_class(
+    path: web::Path<i32>,
+    req: HttpRequest,
+    body: web::Json<AddExamToClassDto>,
+) -> impl Responder {
+    let ext = req.extensions();
+    let user = ext.get::<LoggedUser>().unwrap();
+    let class_id = path.into_inner();
+
+    match service::add_exam_to_class(class_id, body.into_inner(), user).await {
+        Err(e) => HttpResponse::from_error(e),
+        Ok(_) => HttpResponse::NoContent().finish(),
+    }
 }
