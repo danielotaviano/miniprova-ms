@@ -15,6 +15,9 @@ struct ExamId {
     #[sql_type = "diesel::sql_types::Text"]
     class_name: String,
 
+    #[sql_type = "diesel::sql_types::Text"]
+    exam_name: String,
+
     #[sql_type = "diesel::sql_types::Timestamp"]
     start_time: NaiveDateTime,
 
@@ -70,20 +73,21 @@ pub fn import_exam(exam: NewExam, questions: Vec<ImportQuestion>) -> Result<i32,
 
 pub fn get_student_finished_exams(
     uid: i32,
-) -> Result<Vec<(i32, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
+) -> Result<Vec<(i32, String, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let current_time = Utc::now().naive_utc();
 
     let query = sql_query(
         r#"
        SELECT
-            ce.exam_id, c."name" "class_name", ce.start_time, ce.end_time
+            ce.exam_id, c."name" "class_name", e."name" "exam_name",  ce.start_time, ce.end_time
         FROM
             classes_students cs
         INNER JOIN class_exams ce ON
             ce.class_id = cs.class_id
         INNER JOIN classes c ON
             c.id = ce.class_id
+        INNER JOIN exams e ON e.id = ce.exam_id 
         WHERE
             student_id = $1
             AND ce.end_time < $2;
@@ -98,26 +102,35 @@ pub fn get_student_finished_exams(
 
     Ok(results
         .iter()
-        .map(|e| (e.exam_id, e.class_name.clone(), e.start_time, e.end_time))
+        .map(|e| {
+            (
+                e.exam_id,
+                e.class_name.clone(),
+                e.exam_name.clone(),
+                e.start_time,
+                e.end_time,
+            )
+        })
         .collect())
 }
 
 pub fn get_student_open_exams(
     uid: i32,
-) -> Result<Vec<(i32, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
+) -> Result<Vec<(i32, String, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let current_time = Utc::now().naive_utc();
 
     let query = sql_query(
         r#"
-       SELECT
-            ce.exam_id, c."name" "class_name", ce.start_time, ce.end_time
+        SELECT
+            ce.exam_id, c."name" "class_name", e."name" "exam_name",  ce.start_time, ce.end_time
         FROM
             classes_students cs
         INNER JOIN class_exams ce ON
             ce.class_id = cs.class_id
         INNER JOIN classes c ON
             c.id = ce.class_id
+        INNER JOIN exams e ON e.id = ce.exam_id 
         WHERE
             student_id = $1
             AND ce.end_time > $2;
@@ -132,6 +145,14 @@ pub fn get_student_open_exams(
 
     Ok(results
         .iter()
-        .map(|e| (e.exam_id, e.class_name.clone(), e.start_time, e.end_time))
+        .map(|e| {
+            (
+                e.exam_id,
+                e.class_name.clone(),
+                e.exam_name.clone(),
+                e.start_time,
+                e.end_time,
+            )
+        })
         .collect())
 }
