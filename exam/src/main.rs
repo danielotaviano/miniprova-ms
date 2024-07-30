@@ -44,6 +44,11 @@ async fn main() -> std::io::Result<()> {
                         web::resource("/student/open")
                             .wrap(middleware::RoleMiddleware(vec![STUDENT]))
                             .route(web::get().to(exam::controller::get_student_open_exams)),
+                    )
+                    .service(
+                        web::resource("/student/finished")
+                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
+                            .route(web::get().to(exam::controller::get_student_finished_exams)),
                     ),
             )
             .service(
