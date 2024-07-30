@@ -2,6 +2,7 @@ use crate::{
     api::{self, GetExamApi},
     auth::models::LoggedUser,
     errors::ServiceError,
+    exam::{self, model::NewExam, repository::ImportQuestion},
 };
 
 use super::{
@@ -144,10 +145,31 @@ pub async fn add_exam_to_class(
         return Err(ServiceError::BadRequest("Class not found".to_string()));
     }
 
-    let _ = api::get_exam(exam.exam_id, user.jwt.clone()).await?;
+    let api_exam = api::get_exam(exam.exam_id, user.jwt.clone()).await?;
+    println!("{:?}", api_exam);
+    let questions = api::get_exam_questions(api_exam.id, user.jwt.clone()).await?;
+    println!("{:?}", questions);
 
-    repository::add_exam_to_class(class_id, exam)?;
+    let formated_questions: Vec<ImportQuestion> = questions
+        .iter()
+        .map(|q| ImportQuestion {
+            question: q.question.clone(),
+            answers: q
+                .answers
+                .iter()
+                .map(|a| (a.answer.clone(), a.is_correct))
+                .collect(),
+        })
+        .collect();
 
-    println!("e aq?");
+    let db_exam_id = exam::repository::import_exam(
+        NewExam {
+            name: api_exam.name,
+        },
+        formated_questions,
+    )?;
+
+    repository::add_exam_to_class(class_id, db_exam_id, exam.start_date, exam.end_date)?;
+
     Ok(())
 }

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use diesel::{ExpressionMethods, RunQueryDsl, SelectableHelper, Table};
 
 use crate::schema;
@@ -21,14 +21,19 @@ pub fn create_class(new_class: NewClass) -> Result<Class, ServiceError> {
     Ok(class)
 }
 
-pub fn add_exam_to_class(cid: i32, exam: AddExamToClassDto) -> Result<(), ServiceError> {
+pub fn add_exam_to_class(
+    cid: i32,
+    exam_id: i32,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>,
+) -> Result<(), ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     diesel::insert_into(schema::class_exams::table)
         .values((
             schema::class_exams::class_id.eq(cid),
-            schema::class_exams::exam_id.eq(exam.exam_id),
-            schema::class_exams::start_time.eq(exam.start_date.naive_utc()),
-            schema::class_exams::end_time.eq(exam.end_date.naive_utc()),
+            schema::class_exams::exam_id.eq(exam_id),
+            schema::class_exams::start_time.eq(start_date.naive_utc()),
+            schema::class_exams::end_time.eq(end_date.naive_utc()),
         ))
         .execute(&mut conn)
         .map_err(|e| {

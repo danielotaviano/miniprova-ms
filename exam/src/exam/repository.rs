@@ -1,7 +1,11 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
 
-use crate::{db::DB_MANAGER, errors::ServiceError};
+use crate::{db::DB_MANAGER, errors::ServiceError, schema::answers};
+
+use crate::diesel::ExpressionMethods;
+
+use super::model::{NewAnswer, NewExam, NewQuestion};
 
 #[derive(QueryableByName)]
 struct ExamId {
@@ -16,6 +20,52 @@ struct ExamId {
 
     #[sql_type = "diesel::sql_types::Timestamp"]
     end_time: NaiveDateTime,
+}
+
+pub struct ImportQuestion {
+    pub question: String,
+    pub answers: Vec<(String, bool)>,
+}
+
+pub fn import_exam(exam: NewExam, questions: Vec<ImportQuestion>) -> Result<i32, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+
+    let exam_id: i32 = diesel::insert_into(crate::schema::exams::table)
+        .values(&exam)
+        .returning(crate::schema::exams::id)
+        .get_result(&mut conn)
+        .map_err(|_| ServiceError::InternalServerError)?;
+
+    for question in questions {
+        let question_id: i32 = diesel::insert_into(crate::schema::questions::table)
+            .values(&NewQuestion {
+                question: &question.question,
+            })
+            .returning(crate::schema::questions::id)
+            .get_result(&mut conn)
+            .map_err(|_| ServiceError::InternalServerError)?;
+
+        for answer in question.answers {
+            diesel::insert_into(answers::table)
+                .values(&NewAnswer {
+                    answer: answer.0,
+                    is_correct: answer.1,
+                    question_id,
+                })
+                .execute(&mut conn)
+                .map_err(|_| ServiceError::InternalServerError)?;
+        }
+
+        diesel::insert_into(crate::schema::exam_questions::table)
+            .values((
+                crate::schema::exam_questions::exam_id.eq(exam_id),
+                crate::schema::exam_questions::question_id.eq(question_id),
+            ))
+            .execute(&mut conn)
+            .map_err(|_| ServiceError::InternalServerError)?;
+    }
+
+    Ok(exam_id)
 }
 
 pub fn get_student_finished_exams(
