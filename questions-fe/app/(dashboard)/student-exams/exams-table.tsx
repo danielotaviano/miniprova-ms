@@ -19,19 +19,23 @@ import {
   ExamApi,
   ExamToDoApi,
   getExams,
+  getExamsDone,
   getExamsToDo,
   getQuestions,
   QuestionApi,
   UserApi
 } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import { Exam } from './exam';
+import { OpenExam } from './open-exam';
+import { DoneExam } from './done-exam';
 
 export function ExamsTable({}: {}) {
   const [exams, setExams] = useState<ExamToDoApi[]>([]);
+  const [finishedExams, setFinishedExams] = useState<ExamToDoApi[]>([]);
 
   useEffect(() => {
     getExamsToDo().then((res) => setExams(res));
+    getExamsDone().then((res) => setFinishedExams(res));
   }, []);
 
   return (
@@ -45,15 +49,15 @@ export function ExamsTable({}: {}) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Id</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Questions Count</TableHead>
-                <TableHead>Created At</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Start At</TableHead>
+                <TableHead>End At</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {exams.map((e) => (
-                <Exam key={e.exam_name} exam={e} />
+                <OpenExam key={e.exam_name} exam={e} />
               ))}
             </TableBody>
           </Table>
@@ -71,16 +75,16 @@ export function ExamsTable({}: {}) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Id</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Questions Count</TableHead>
-                <TableHead>Created At</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Started At</TableHead>
+                <TableHead>Ended at</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* {exams.map((e) => (
-                <Exam key={e.id} exam={e} />
-              ))} */}
+              {finishedExams.map((e) => (
+                <DoneExam key={e.exam_name} exam={e} />
+              ))}
             </TableBody>
           </Table>
         </CardContent>

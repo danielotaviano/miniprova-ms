@@ -95,6 +95,24 @@ export const getExamsToDo = async (): Promise<ExamToDoApi[]> => {
   return res.json();
 };
 
+export const getExamsDone = async (): Promise<ExamToDoApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/student/finished`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
 export const getUnrolledClasses = async (): Promise<StudentClassApi[]> => {
   const session = await auth();
 
