@@ -82,6 +82,11 @@ async fn main() -> std::io::Result<()> {
                             .route(web::get().to(class::controller::list_classes_by_teacher)),
                     )
                     .service(
+                        web::resource("/exam/{exam_id}/questions")
+                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
+                            .route(web::get().to(exam::controller::get_student_questions)),
+                    )
+                    .service(
                         web::resource("/{class_id}")
                             .route(
                                 web::get()

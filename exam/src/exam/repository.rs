@@ -1,10 +1,12 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
 
+use crate::exam::dto::GetStudentAnswerDto;
 use crate::{db::DB_MANAGER, errors::ServiceError, schema::answers};
 
 use crate::diesel::ExpressionMethods;
 
+use super::dto::GetStudentQuestionDto;
 use super::model::{NewAnswer, NewExam, NewQuestion};
 
 #[derive(QueryableByName)]
@@ -25,9 +27,79 @@ struct ExamId {
     end_time: NaiveDateTime,
 }
 
+#[derive(QueryableByName)]
+struct Question {
+    #[sql_type = "diesel::sql_types::Integer"]
+    id: i32,
+
+    #[sql_type = "diesel::sql_types::Text"]
+    question: String,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    answer_id: i32,
+
+    #[sql_type = "diesel::sql_types::Text"]
+    answer: String,
+
+    #[sql_type = "diesel::sql_types::Bool"]
+    is_correct: bool,
+}
+
 pub struct ImportQuestion {
     pub question: String,
     pub answers: Vec<(String, bool)>,
+}
+
+pub fn get_student_questions(exam_id: i32) -> Result<Vec<GetStudentQuestionDto>, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+
+    let query = sql_query(
+        r#"
+        SELECT
+            q.id, q.question, a.id, a.answer, a.is_correct
+        FROM
+            exams e
+        INNER JOIN exam_questions eq ON
+            eq.exam_id = e.id
+        INNER JOIN questions q ON
+            q.id = eq.question_id
+        INNER JOIN answers a ON
+            a.question_id = q.id
+        WHERE
+            e.id = $1;
+        "#,
+    )
+    .bind::<diesel::sql_types::Integer, _>(exam_id);
+
+    let results: Vec<Question> = query
+        .get_results::<Question>(&mut conn)
+        .map_err(|_| ServiceError::InternalServerError)?;
+
+    let mut questions: Vec<GetStudentQuestionDto> = Vec::new();
+
+    for result in results {
+        let question = questions.iter_mut().find(|q| q.id == result.id);
+        let question = match question {
+            Some(q) => q,
+            None => {
+                let new_question = GetStudentQuestionDto {
+                    id: result.id,
+                    question: result.question.clone(),
+                    answers: Vec::new(),
+                };
+
+                questions.push(new_question);
+                questions.last_mut().unwrap()
+            }
+        };
+
+        question.answers.push(GetStudentAnswerDto {
+            answer: result.answer.clone(),
+            id: result.answer_id,
+        });
+    }
+
+    Ok(questions)
 }
 
 pub fn import_exam(exam: NewExam, questions: Vec<ImportQuestion>) -> Result<i32, ServiceError> {

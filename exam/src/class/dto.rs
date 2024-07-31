@@ -56,3 +56,11 @@ impl UpdateClassInputDto {
         Ok(())
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ClassExamDto {
+    pub class_id: i32,
+    pub exam_id: i32,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
+}

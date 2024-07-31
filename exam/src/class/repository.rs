@@ -1,10 +1,12 @@
 use chrono::{DateTime, NaiveDate, Utc};
-use diesel::{ExpressionMethods, RunQueryDsl, SelectableHelper, Table};
+use diesel::{
+    sql_query, ExpressionMethods, QueryableByName, RunQueryDsl, Selectable, SelectableHelper, Table,
+};
 
 use crate::schema;
 use crate::{db::DB_MANAGER, errors::ServiceError, schema::classes_students};
 
-use super::dto::AddExamToClassDto;
+use super::dto::{AddExamToClassDto, ClassExamDto};
 use super::model::{Class, NewClass, UpdateClass};
 use crate::diesel::OptionalExtension;
 use crate::diesel::QueryDsl;
@@ -42,6 +44,57 @@ pub fn add_exam_to_class(
         })?;
 
     Ok(())
+}
+
+#[derive(QueryableByName)]
+struct ClassExam {
+    #[sql_type = "diesel::sql_types::Integer"]
+    class_id: i32,
+    #[sql_type = "diesel::sql_types::Integer"]
+    exam_id: i32,
+    #[sql_type = "diesel::sql_types::Date"]
+    start_time: NaiveDate,
+    #[sql_type = "diesel::sql_types::Date"]
+    end_time: NaiveDate,
+}
+
+pub fn get_class_exam(exam_id: i32) -> Result<Option<ClassExamDto>, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+    let query = sql_query(
+        r#"
+       SELECT
+            ce.class_id,
+            ce.exam_id,
+            ce.start_time,
+            ce.end_time
+        FROM
+            class_exams ce
+        WHERE
+            exam_id = $1
+        LIMIT 1;
+        "#,
+    )
+    .bind::<diesel::sql_types::Integer, _>(exam_id);
+
+    let class_exam: Option<ClassExam> = query
+        .get_result(&mut conn)
+        .optional()
+        .map_err(|_| ServiceError::InternalServerError)?;
+
+    let class_exam = match class_exam {
+        Some(ce) => {
+            let dto = ClassExamDto {
+                class_id: ce.class_id,
+                exam_id: ce.exam_id,
+                start_time: DateTime::from_utc(ce.start_time.and_hms(0, 0, 0), Utc),
+                end_time: DateTime::from_utc(ce.end_time.and_hms(0, 0, 0), Utc),
+            };
+            Ok(Some(dto))
+        }
+        None => Ok(None),
+    };
+
+    class_exam
 }
 
 pub fn get_class_by_id(class_id: i32) -> Result<Option<Class>, ServiceError> {

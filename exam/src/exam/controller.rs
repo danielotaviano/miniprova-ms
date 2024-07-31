@@ -23,3 +23,12 @@ pub async fn get_student_finished_exams(req: HttpRequest) -> impl Responder {
         Ok(exams) => HttpResponse::Ok().json(exams).into(),
     }
 }
+
+pub async fn get_student_questions(req: HttpRequest, path: web::Path<i32>) -> impl Responder {
+    let exam_id = path.into_inner();
+
+    match service::get_questions_as_student(exam_id).await {
+        Err(e) => return HttpResponse::from_error(e),
+        Ok(questions) => HttpResponse::Ok().json(questions).into(),
+    }
+}

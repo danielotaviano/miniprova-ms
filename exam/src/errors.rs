@@ -19,7 +19,10 @@ pub enum ServiceError {
     Unauthorized,
 
     #[display(fmt = "Forbidden")]
-    Forbidden
+    Forbidden,
+
+    #[display(fmt = "Not Found")]
+    NotFound,
 }
 
 impl ResponseError for ServiceError {
@@ -40,6 +43,9 @@ impl ResponseError for ServiceError {
             }),
             ServiceError::Forbidden => HttpResponse::Forbidden().json(&ErrorResponse {
                 message: "Forbidden".into(),
+            }),
+            ServiceError::NotFound => HttpResponse::NotFound().json(&ErrorResponse {
+                message: "Not Found".into(),
             }),
         }
     }
