@@ -3,6 +3,16 @@
 import { auth } from './auth';
 import { Role } from './utils';
 
+export interface GetExamQuestionsApi {
+  id: number;
+  question: string;
+  answers: {
+    id: number;
+    answer: String;
+    marked: boolean;
+  }[];
+}
+
 export interface CreateExamApi {
   name: string;
   questions: number[];
@@ -71,11 +81,89 @@ export interface StudentClassApi {
 }
 
 export interface ExamToDoApi {
+  id: number;
   exam_name: string;
   start_time: string;
   end_time: string;
   class_name: string;
 }
+
+export interface StudentExamResultApi {
+  id: number;
+  question: string;
+  answers: {
+    id: number;
+    answer: string;
+    correct: boolean;
+    marked: boolean;
+  }[];
+}
+
+export const getStudentExamResults = async (
+  examId: number
+): Promise<StudentExamResultApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/student/${examId}/results`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
+export const submitAnswer = async (
+  examId: number,
+  questionId: number,
+  answerId: number
+): Promise<boolean> => {
+  const session = await auth();
+
+  if (!session) {
+    return false;
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/student/${examId}/question/${questionId}/submit`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ answer_id: answerId }),
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  return res.ok;
+};
+
+export const getExamQuestions = async (
+  id: number
+): Promise<GetExamQuestionsApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/student/exam/${id}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
 
 export const getExamsToDo = async (): Promise<ExamToDoApi[]> => {
   const session = await auth();

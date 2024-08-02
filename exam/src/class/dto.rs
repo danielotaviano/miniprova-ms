@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -61,6 +61,6 @@ impl UpdateClassInputDto {
 pub struct ClassExamDto {
     pub class_id: i32,
     pub exam_id: i32,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: NaiveDateTime,
+    pub end_time: NaiveDateTime,
 }

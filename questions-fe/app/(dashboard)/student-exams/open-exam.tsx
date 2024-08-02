@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { ExamToDoApi } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export function OpenExam({ exam }: { exam: ExamToDoApi }) {
+  const router = useRouter();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -41,7 +44,10 @@ export function OpenExam({ exam }: { exam: ExamToDoApi }) {
       <TableCell>
         <Button
           disabled={new Date(exam.start_time) > new Date()}
-          onClick={() => {}}
+          onClick={() => {
+            // want to redirect to /exam/[id]
+            router.push(`/exam/${exam.id}`);
+          }}
           className="min-w-28"
         >
           {new Date(exam.start_time) > new Date()

@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::{
     sql_query, ExpressionMethods, QueryableByName, RunQueryDsl, Selectable, SelectableHelper, Table,
 };
@@ -46,16 +46,16 @@ pub fn add_exam_to_class(
     Ok(())
 }
 
-#[derive(QueryableByName)]
+#[derive(QueryableByName, Debug)]
 struct ClassExam {
     #[sql_type = "diesel::sql_types::Integer"]
     class_id: i32,
     #[sql_type = "diesel::sql_types::Integer"]
     exam_id: i32,
-    #[sql_type = "diesel::sql_types::Date"]
-    start_time: NaiveDate,
-    #[sql_type = "diesel::sql_types::Date"]
-    end_time: NaiveDate,
+    #[sql_type = "diesel::sql_types::Timestamp"]
+    start_time: NaiveDateTime,
+    #[sql_type = "diesel::sql_types::Timestamp"]
+    end_time: NaiveDateTime,
 }
 
 pub fn get_class_exam(exam_id: i32) -> Result<Option<ClassExamDto>, ServiceError> {
@@ -76,18 +76,21 @@ pub fn get_class_exam(exam_id: i32) -> Result<Option<ClassExamDto>, ServiceError
     )
     .bind::<diesel::sql_types::Integer, _>(exam_id);
 
+    println!("{:?}", query);
     let class_exam: Option<ClassExam> = query
         .get_result(&mut conn)
         .optional()
         .map_err(|_| ServiceError::InternalServerError)?;
+
+    println!("{:?}", class_exam);
 
     let class_exam = match class_exam {
         Some(ce) => {
             let dto = ClassExamDto {
                 class_id: ce.class_id,
                 exam_id: ce.exam_id,
-                start_time: DateTime::from_utc(ce.start_time.and_hms(0, 0, 0), Utc),
-                end_time: DateTime::from_utc(ce.end_time.and_hms(0, 0, 0), Utc),
+                start_time: ce.start_time,
+                end_time: ce.end_time,
             };
             Ok(Some(dto))
         }

@@ -49,6 +49,21 @@ async fn main() -> std::io::Result<()> {
                         web::resource("/student/finished")
                             .wrap(middleware::RoleMiddleware(vec![STUDENT]))
                             .route(web::get().to(exam::controller::get_student_finished_exams)),
+                    )
+                    .service(
+                        web::resource("/student/exam/{exam_id}/questions")
+                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
+                            .route(web::get().to(exam::controller::get_student_questions)),
+                    )
+                    .service(
+                        web::resource("/student/{exam_id}/question/{question_id}/submit")
+                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
+                            .post(exam::controller::submit_answer_to_question_in_exam),
+                    )
+                    .service(
+                        web::resource("/student/{exam_id}/results")
+                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
+                            .get(exam::controller::get_student_exam_result),
                     ),
             )
             .service(
@@ -80,11 +95,6 @@ async fn main() -> std::io::Result<()> {
                         web::resource("/teachers")
                             .wrap(middleware::RoleMiddleware(vec![TEACHER]))
                             .route(web::get().to(class::controller::list_classes_by_teacher)),
-                    )
-                    .service(
-                        web::resource("/exam/{exam_id}/questions")
-                            .wrap(middleware::RoleMiddleware(vec![STUDENT]))
-                            .route(web::get().to(exam::controller::get_student_questions)),
                     )
                     .service(
                         web::resource("/{class_id}")
