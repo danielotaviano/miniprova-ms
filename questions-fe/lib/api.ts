@@ -88,6 +88,14 @@ export interface ExamToDoApi {
   class_name: string;
 }
 
+export interface TeacherExamApi {
+  id: number;
+  exam_name: string;
+  start_time: string;
+  end_time: string;
+  class_name: string;
+}
+
 export interface StudentExamResultApi {
   id: number;
   question: string;
@@ -98,6 +106,52 @@ export interface StudentExamResultApi {
     marked: boolean;
   }[];
 }
+
+export interface TeacherStudentResultApi {
+  id: number;
+  name: string;
+  score: number;
+  total_questions: number;
+  answered_questions: number;
+}
+
+export const getTeacherStudentResults = async (
+  examId: number
+): Promise<TeacherStudentResultApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/teacher/${examId}/results`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
+
+export const getTeacherExams = async (): Promise<TeacherExamApi[]> => {
+  const session = await auth();
+
+  if (!session) {
+    return [];
+  }
+
+  const res = await fetch(
+    `${process.env.GATEWAY_URL}/exam/exams/teacher/exams`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.user.jwt}`
+      }
+    }
+  );
+  return res.json();
+};
 
 export const getStudentExamResults = async (
   examId: number
@@ -209,7 +263,7 @@ export const getUnrolledClasses = async (): Promise<StudentClassApi[]> => {
   }
 
   const res = await fetch(
-    `${process.env.GATEWAY_URL}/exam/classes/students/unenrolled`,
+    `${process.env.GATEWAY_URL}/class/classes/students/unenrolled`,
     {
       headers: {
         Authorization: `Bearer ${session.user.jwt}`
@@ -227,7 +281,7 @@ export const getEnrolledClasses = async (): Promise<StudentClassApi[]> => {
   }
 
   const res = await fetch(
-    `${process.env.GATEWAY_URL}/exam/classes/students/enrolled`,
+    `${process.env.GATEWAY_URL}/class/classes/students/enrolled`,
     {
       headers: {
         Authorization: `Bearer ${session.user.jwt}`
@@ -245,7 +299,7 @@ export const enrollClass = async (id: number): Promise<boolean> => {
   }
 
   const res = await fetch(
-    `${process.env.GATEWAY_URL}/exam/classes/${id}/enroll`,
+    `${process.env.GATEWAY_URL}/class/classes/${id}/enroll`,
     {
       method: 'POST',
       headers: {
@@ -264,7 +318,7 @@ export const getClassesByTeacher = async (): Promise<ClassByTeacherApi[]> => {
     return [];
   }
 
-  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/teachers`, {
+  const res = await fetch(`${process.env.GATEWAY_URL}/class/classes/teachers`, {
     headers: {
       Authorization: `Bearer ${session.user.jwt}`
     }
@@ -282,7 +336,7 @@ export const updateClassByTeacher = async (
     return false;
   }
 
-  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+  const res = await fetch(`${process.env.GATEWAY_URL}/class/classes/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(classByTeacher),
     headers: {
@@ -301,7 +355,7 @@ export const getClassById = async (id: number): Promise<ClassByTeacherApi> => {
     throw new Error('dont found a session');
   }
 
-  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+  const res = await fetch(`${process.env.GATEWAY_URL}/class/classes/${id}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${session.user.jwt}`,
@@ -321,7 +375,7 @@ export const createClassByTeacher = async (
     return false;
   }
 
-  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes`, {
+  const res = await fetch(`${process.env.GATEWAY_URL}/class/classes`, {
     method: 'POST',
     body: JSON.stringify(classByTeacher),
     headers: {
@@ -340,7 +394,7 @@ export const deleteClassByTeacher = async (id: number): Promise<boolean> => {
     return false;
   }
 
-  const res = await fetch(`${process.env.GATEWAY_URL}/exam/classes/${id}`, {
+  const res = await fetch(`${process.env.GATEWAY_URL}/class/classes/${id}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${session.user.jwt}`
