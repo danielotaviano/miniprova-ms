@@ -16,10 +16,10 @@ struct ExamId {
     exam_id: i32,
 
     #[sql_type = "diesel::sql_types::Text"]
-    class_name: String,
-
-    #[sql_type = "diesel::sql_types::Text"]
     exam_name: String,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    class_id: i32,
 
     #[sql_type = "diesel::sql_types::Timestamp"]
     start_time: NaiveDateTime,
@@ -29,7 +29,31 @@ struct ExamId {
 }
 
 #[derive(QueryableByName)]
+pub struct ExamById {
+    #[sql_type = "diesel::sql_types::Integer"]
+    id: i32,
+
+    #[sql_type = "diesel::sql_types::Text"]
+    name: String,
+}
+
+#[derive(QueryableByName)]
 struct Question {
+    #[sql_type = "diesel::sql_types::Integer"]
+    id: i32,
+
+    #[sql_type = "diesel::sql_types::Text"]
+    question: String,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    answer_id: i32,
+
+    #[sql_type = "diesel::sql_types::Text"]
+    answer: String,
+}
+
+#[derive(QueryableByName)]
+struct StudentQuestion {
     #[sql_type = "diesel::sql_types::Integer"]
     id: i32,
 
@@ -67,9 +91,64 @@ pub struct StudentQuestionResult {
     is_correct: bool,
 }
 
+#[derive(QueryableByName, Serialize)]
+pub struct StudentQuestionAsTeacherResult {
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub id: i32,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub score: i32,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub total_questions: i32,
+
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub answered_questions: i32,
+}
+
 pub struct ImportQuestion {
     pub question: String,
     pub answers: Vec<(String, bool)>,
+}
+
+pub fn get_exam_results_as_teacher(
+    exam_id: i32,
+) -> Result<Vec<StudentQuestionAsTeacherResult>, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+
+    let query = sql_query(
+        r#"
+        select
+            user_id "id",
+            count(distinct a.id) filter (
+        where
+            a.is_correct)::int4 "score",
+            count(distinct eq.question_id)::int4 "total_questions",
+            count(distinct sa.id)::int4 "answered_questions"
+        from
+            student_answers sa
+        inner join answers a 
+            on
+            a.id = sa.answer_id
+        inner join exam_questions eq on
+            eq.exam_id = sa.exam_id
+        where
+            sa.exam_id = $1
+        group by
+            sa.user_id;
+        "#,
+    )
+    .bind::<diesel::sql_types::Integer, _>(exam_id);
+    println!("asdasdasdasdasd13 {:?}", query);
+
+    let results: Vec<StudentQuestionAsTeacherResult> = query
+        .get_results::<StudentQuestionAsTeacherResult>(&mut conn)
+        .map_err(|e| {
+            println!("error: {:?}", e);
+            ServiceError::InternalServerError
+        })?;
+
+    Ok(results)
 }
 
 pub fn get_student_exam_result(
@@ -181,9 +260,10 @@ pub fn get_question_by_id(question_id: i32) -> Result<Option<GetStudentQuestionD
     )
     .bind::<diesel::sql_types::Integer, _>(question_id);
 
-    let results: Vec<Question> = query
-        .get_results::<Question>(&mut conn)
-        .map_err(|_| ServiceError::InternalServerError)?;
+    let results: Vec<Question> = query.get_results::<Question>(&mut conn).map_err(|e| {
+        println!("error: {:?}", e);
+        ServiceError::InternalServerError
+    })?;
 
     if results.is_empty() {
         return Ok(None);
@@ -240,8 +320,8 @@ pub fn get_student_questions(
     .bind::<diesel::sql_types::Integer, _>(exam_id)
     .bind::<diesel::sql_types::Integer, _>(user_id);
 
-    let results: Vec<Question> = query
-        .get_results::<Question>(&mut conn)
+    let results: Vec<StudentQuestion> = query
+        .get_results::<StudentQuestion>(&mut conn)
         .map_err(|_| ServiceError::InternalServerError)?;
 
     let mut questions: Vec<GetStudentQuestionDto> = Vec::new();
@@ -313,29 +393,29 @@ pub fn import_exam(exam: NewExam, questions: Vec<ImportQuestion>) -> Result<i32,
     Ok(exam_id)
 }
 
-pub fn get_student_finished_exams(
-    uid: i32,
-) -> Result<Vec<(i32, String, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
+pub fn get_classes_exams(
+    uid: Vec<i32>,
+) -> Result<Vec<(i32, String, i32, NaiveDateTime, NaiveDateTime)>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let current_time = Utc::now().naive_utc();
 
     let query = sql_query(
         r#"
-       SELECT
-            ce.exam_id, c."name" "class_name", e."name" "exam_name",  ce.start_time, ce.end_time
-        FROM
-            classes_students cs
-        INNER JOIN class_exams ce ON
-            ce.class_id = cs.class_id
-        INNER JOIN classes c ON
-            c.id = ce.class_id
-        INNER JOIN exams e ON e.id = ce.exam_id 
-        WHERE
-            student_id = $1
-            AND ce.end_time < $2;
+        select
+            ce.exam_id,
+            e."name" "exam_name",
+            ce.class_id,
+            ce.start_time,
+            ce.end_time
+        from
+            class_exams ce
+        inner join exams e on
+            e.id = ce.exam_id
+        where
+            ce.class_id = any($1);
         "#,
     )
-    .bind::<diesel::sql_types::Integer, _>(uid)
+    .bind::<diesel::sql_types::Array<diesel::sql_types::Integer>, _>(uid)
     .bind::<diesel::sql_types::Timestamp, _>(current_time);
 
     let results: Vec<ExamId> = query
@@ -347,8 +427,8 @@ pub fn get_student_finished_exams(
         .map(|e| {
             (
                 e.exam_id,
-                e.class_name.clone(),
                 e.exam_name.clone(),
+                e.class_id,
                 e.start_time,
                 e.end_time,
             )
@@ -356,29 +436,30 @@ pub fn get_student_finished_exams(
         .collect())
 }
 
-pub fn get_student_open_exams(
-    uid: i32,
-) -> Result<Vec<(i32, String, String, NaiveDateTime, NaiveDateTime)>, ServiceError> {
+pub fn get_classes_finished_exams(
+    uid: Vec<i32>,
+) -> Result<Vec<(i32, String, i32, NaiveDateTime, NaiveDateTime)>, ServiceError> {
     let mut conn = DB_MANAGER.lock().unwrap().get_database();
     let current_time = Utc::now().naive_utc();
 
     let query = sql_query(
         r#"
-        SELECT
-            ce.exam_id, c."name" "class_name", e."name" "exam_name",  ce.start_time, ce.end_time
-        FROM
-            classes_students cs
-        INNER JOIN class_exams ce ON
-            ce.class_id = cs.class_id
-        INNER JOIN classes c ON
-            c.id = ce.class_id
-        INNER JOIN exams e ON e.id = ce.exam_id 
-        WHERE
-            student_id = $1
-            AND ce.end_time > $2;
+        select
+            ce.exam_id,
+            e."name" "exam_name",
+            ce.class_id,
+            ce.start_time,
+            ce.end_time
+        from
+            class_exams ce
+        inner join exams e on
+            e.id = ce.exam_id
+        where
+            ce.class_id = any($1)
+            and ce.end_time < $2;
         "#,
     )
-    .bind::<diesel::sql_types::Integer, _>(uid)
+    .bind::<diesel::sql_types::Array<diesel::sql_types::Integer>, _>(uid)
     .bind::<diesel::sql_types::Timestamp, _>(current_time);
 
     let results: Vec<ExamId> = query
@@ -390,11 +471,80 @@ pub fn get_student_open_exams(
         .map(|e| {
             (
                 e.exam_id,
-                e.class_name.clone(),
                 e.exam_name.clone(),
+                e.class_id,
                 e.start_time,
                 e.end_time,
             )
         })
         .collect())
+}
+
+pub fn get_classes_open_exams(
+    uid: Vec<i32>,
+) -> Result<Vec<(i32, String, i32, NaiveDateTime, NaiveDateTime)>, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+    let current_time = Utc::now().naive_utc();
+
+    let query = sql_query(
+        r#"
+        select
+            ce.exam_id,
+            e."name" "exam_name",
+            ce.class_id,
+            ce.start_time,
+            ce.end_time
+        from
+            class_exams ce
+        inner join exams e on
+            e.id = ce.exam_id
+        where
+            ce.class_id = any($1)
+            and ce.end_time > $2;
+        "#,
+    )
+    .bind::<diesel::sql_types::Array<diesel::sql_types::Integer>, _>(uid)
+    .bind::<diesel::sql_types::Timestamp, _>(current_time);
+
+    let results: Vec<ExamId> = query
+        .get_results::<ExamId>(&mut conn)
+        .map_err(|_| ServiceError::InternalServerError)?;
+
+    Ok(results
+        .iter()
+        .map(|e| {
+            (
+                e.exam_id,
+                e.exam_name.clone(),
+                e.class_id,
+                e.start_time,
+                e.end_time,
+            )
+        })
+        .collect())
+}
+
+pub fn get_exam_by_id(exam_id: i32) -> Result<Option<ExamById>, ServiceError> {
+    let mut conn = DB_MANAGER.lock().unwrap().get_database();
+
+    let query = sql_query(
+        r#"
+        select
+            e.id,
+            e."name"
+        from
+            exams e
+        where
+            e.id = $1;
+
+        "#,
+    )
+    .bind::<diesel::sql_types::Integer, _>(exam_id);
+
+    let results: ExamById = query.get_result::<ExamById>(&mut conn).map_err(|e| {
+        println!("error: {:?}", e);
+        ServiceError::InternalServerError
+    })?;
+
+    Ok(Some(results))
 }

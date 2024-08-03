@@ -36,6 +36,27 @@ pub async fn set_user_roles(path: web::Path<i32>, roles: web::Json<Vec<String>>)
     }
 }
 
+pub async fn get_user_by_id(path: web::Path<i32>) -> impl Responder {
+    let user_id = path.into_inner();
+
+    match service::get_user_with_roles_and_avatar_by_id(user_id) {
+        Ok(user) => {
+            let user = user.unwrap();
+            let formatted_user: MeResponse = MeResponse {
+                avatar: user.avatar,
+                email: user.email,
+                id: user.id,
+                name: user.name,
+                roles: user.roles,
+                jwt: "".to_string(),
+            };
+
+            HttpResponse::Ok().json(formatted_user)
+        }
+        Err(e) => HttpResponse::from_error(e),
+    }
+}
+
 pub async fn me(req: actix_web::HttpRequest) -> impl Responder {
     let ext = req.extensions();
     let user = match ext.get::<LoggedUser>() {

@@ -21,23 +21,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    classes (id) {
-        id -> Int4,
-        name -> Varchar,
-        code -> Varchar,
-        description -> Text,
-        user_id -> Int4,
-    }
-}
-
-diesel::table! {
-    classes_students (class_id, student_id) {
-        class_id -> Int4,
-        student_id -> Int4,
-    }
-}
-
-diesel::table! {
     exam_questions (exam_id, question_id) {
         exam_id -> Int4,
         question_id -> Int4,
@@ -73,9 +56,7 @@ diesel::table! {
 }
 
 diesel::joinable!(answers -> questions (question_id));
-diesel::joinable!(class_exams -> classes (class_id));
 diesel::joinable!(class_exams -> exams (exam_id));
-diesel::joinable!(classes_students -> classes (class_id));
 diesel::joinable!(exam_questions -> exams (exam_id));
 diesel::joinable!(exam_questions -> questions (question_id));
 diesel::joinable!(student_answers -> answers (answer_id));
@@ -85,8 +66,6 @@ diesel::joinable!(student_answers -> questions (question_id));
 diesel::allow_tables_to_appear_in_same_query!(
     answers,
     class_exams,
-    classes,
-    classes_students,
     exam_questions,
     exams,
     questions,

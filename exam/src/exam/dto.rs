@@ -18,6 +18,24 @@ impl StudentAnswerInputDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct GetTeacherExamDto {
+    pub id: i32,
+    pub exam_name: String,
+    pub start_time: NaiveDateTime,
+    pub end_time: NaiveDateTime,
+    pub class_name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StudentExamResultDto {
+    pub id: i32,
+    pub name: String,
+    pub score: i32,
+    pub total_questions: i32,
+    pub answered_questions: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetStudentOpenExamDto {
     pub id: i32,
     pub exam_name: String,

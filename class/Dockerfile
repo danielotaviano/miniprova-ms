@@ -12,7 +12,7 @@ RUN cargo build --lib
 COPY /src/ ./src
 RUN cargo build
 
-RUN cp ./target/debug/exam /usr/local/bin/app
+RUN cp ./target/debug/class /usr/local/bin/app
 
 EXPOSE 3000
 

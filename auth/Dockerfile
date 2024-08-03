@@ -2,22 +2,18 @@
 FROM rust:1.79.0 as builder
 
 # Create a new empty shell project
-RUN USER=root cargo new --bin app
 WORKDIR /app
 
 # Copy the Cargo.toml and Cargo.lock files and download the dependencies
-COPY ./Cargo.toml ./
-RUN cargo build --release
+COPY ./Cargo.toml .
+RUN echo "// dummy file" > dummy.rs
+RUN cargo build --lib
 
-# Copy the source and build the application
-COPY ./src ./src
-RUN cargo build --release
+COPY /src/ ./src
+RUN cargo build
 
-# COPY ./target/release/auth /usr/local/bin/app
-RUN cp ./target/release/auth /usr/local/bin/app
-RUN rm -rf /app
+RUN cp ./target/debug/auth /usr/local/bin/app
 
-# Expose port 3000
 EXPOSE 3000
 
 CMD ["app"]

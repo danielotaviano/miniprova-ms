@@ -54,6 +54,12 @@ async fn main() -> std::io::Result<()> {
                             .wrap(middleware::RoleMiddleware(vec![ADMIN]))
                             .wrap(middleware::AuthMiddleware)
                             .patch(user::controller::set_user_roles),
+                    )
+                    .service(
+                        web::resource("/{user_id}")
+                            .wrap(middleware::RoleMiddleware(vec![TEACHER, MONITOR]))
+                            .wrap(middleware::AuthMiddleware)
+                            .get(user::controller::get_user_by_id),
                     ),
             )
             .service(

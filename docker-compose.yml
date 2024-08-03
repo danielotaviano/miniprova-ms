@@ -56,6 +56,7 @@ services:
       - auth
       - exam
       - question
+      - class
     deploy:
       replicas: 1
       resources:
@@ -144,6 +145,33 @@ services:
       - EUREKA_HOSTNAME=eureka-server
       - EUREKA_PORT=8761
       - HOSTNAME=exam
+      - GATEWAY_URL=http://zuul-server:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+  class:
+    build: ./class
+    networks:
+      - miniprova
+    environment:
+      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/classes
+      - PORT=3000
+      - EUREKA_HOSTNAME=eureka-server
+      - EUREKA_PORT=8761
+      - HOSTNAME=class
       - GATEWAY_URL=http://zuul-server:8080
     depends_on:
       eureka-server:

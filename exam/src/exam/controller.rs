@@ -8,7 +8,7 @@ pub async fn get_student_open_exams(req: HttpRequest) -> impl Responder {
     let ext = req.extensions();
     let user = ext.get::<LoggedUser>().unwrap();
 
-    match service::get_student_open_exams(user.id).await {
+    match service::get_student_open_exams(user).await {
         Err(e) => return HttpResponse::from_error(e),
         Ok(exams) => HttpResponse::Ok().json(exams).into(),
     }
@@ -18,7 +18,31 @@ pub async fn get_student_finished_exams(req: HttpRequest) -> impl Responder {
     let ext = req.extensions();
     let user = ext.get::<LoggedUser>().unwrap();
 
-    match service::get_student_finished_exams(user.id).await {
+    match service::get_student_finished_exams(user).await {
+        Err(e) => return HttpResponse::from_error(e),
+        Ok(exams) => HttpResponse::Ok().json(exams).into(),
+    }
+}
+
+pub async fn get_exam_results_as_teacher(path: web::Path<i32>, req: HttpRequest) -> impl Responder {
+    let exam_id = path.into_inner();
+
+    let ext = req.extensions();
+    let user = ext.get::<LoggedUser>().unwrap();
+
+    let results = match service::get_exam_results_as_teacher(user, exam_id).await {
+        Err(e) => return HttpResponse::from_error(e),
+        Ok(results) => results,
+    };
+
+    HttpResponse::Ok().json(results).into()
+}
+
+pub async fn get_teacher_exams(req: HttpRequest) -> impl Responder {
+    let ext = req.extensions();
+    let user = ext.get::<LoggedUser>().unwrap();
+
+    match service::get_teacher_exams(user).await {
         Err(e) => return HttpResponse::from_error(e),
         Ok(exams) => HttpResponse::Ok().json(exams).into(),
     }
