@@ -7,9 +7,6 @@ networks:
      config:
        - subnet: 172.28.0.0/16
 
-            
-
-
 services:
   postgres_db:
     image: postgres:15.1-alpine
@@ -84,14 +81,8 @@ services:
     build: ./auth
     networks:
       - miniprova
-    environment:
-      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/auth
-      - JWT_SECRET=f1ce94ef913c6ec52ad9ed48cdae9c2a4829a95e0812d117509860fbe0784a8f
-      - PORT=3000
-      - EUREKA_HOSTNAME=eureka-server
-      - EUREKA_PORT=8761
-      - HOSTNAME=auth
-      - GATEWAY_URL=http://zuul-server:8080
+    env_file:
+      - ./auth/.env.compose
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -112,13 +103,8 @@ services:
     build: ./question
     networks:
       - miniprova
-    environment:
-      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/questions
-      - PORT=3000
-      - EUREKA_HOSTNAME=eureka-server
-      - EUREKA_PORT=8761
-      - HOSTNAME=question
-      - GATEWAY_URL=http://zuul-server:8080
+    env_file:
+      - ./question/.env.compose
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -139,13 +125,8 @@ services:
     build: ./exam
     networks:
       - miniprova
-    environment:
-      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/exams
-      - PORT=3000
-      - EUREKA_HOSTNAME=eureka-server
-      - EUREKA_PORT=8761
-      - HOSTNAME=exam
-      - GATEWAY_URL=http://zuul-server:8080
+    env_file:
+      - ./exam/.env.compose
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -166,13 +147,8 @@ services:
     build: ./class
     networks:
       - miniprova
-    environment:
-      - DATABASE_URL=postgres://admin:admin@postgres_db:5432/classes
-      - PORT=3000
-      - EUREKA_HOSTNAME=eureka-server
-      - EUREKA_PORT=8761
-      - HOSTNAME=class
-      - GATEWAY_URL=http://zuul-server:8080
+    env_file:
+      - ./class/.env.compose
     depends_on:
       eureka-server:
         condition: service_healthy
