@@ -234,6 +234,13 @@ pub fn submit_answer_to_question_in_exam(
             crate::schema::student_answers::user_id.eq(user_id),
             crate::schema::student_answers::answer_id.eq(answer_id),
         ))
+        .on_conflict((
+            crate::schema::student_answers::exam_id,
+            crate::schema::student_answers::question_id,
+            crate::schema::student_answers::user_id,
+        ))
+        .do_update()
+        .set(crate::schema::student_answers::answer_id.eq(answer_id))
         .execute(&mut conn)
         .map_err(|_| ServiceError::InternalServerError)?;
 

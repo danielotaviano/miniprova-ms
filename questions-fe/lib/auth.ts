@@ -52,30 +52,26 @@ export const { signIn, auth, signOut } = NextAuth({
       return token;
     },
     async session({ session, token, user }) {
-      try {
-        const gateway = process.env.GATEWAY_URL;
-        const res = await fetch(`${gateway}/auth/me`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token.jwt}`,
-            'Content-Type': 'application/json'
-          }
-        });
+      const gateway = process.env.GATEWAY_URL;
+      const res = await fetch(`${gateway}/auth/me`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token.jwt}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-        if (!res.ok) throw new Error('Failed to fetch user information');
-        const userInfo: MeResponse = await res.json();
+      if (!res.ok) throw new Error('Failed to fetch user information');
+      const userInfo: MeResponse = await res.json();
 
-        console.log('session.user', session.user);
-        console.log('userInfo', userInfo);
+      console.log('session.user', session.user);
+      console.log('userInfo', userInfo);
 
-        session.user = {
-          ...session.user,
-          ...userInfo,
-          jwt: token.jwt as string
-        };
-      } catch (error) {
-        console.error('Failed to fetch user information', error);
-      }
+      session.user = {
+        ...session.user,
+        ...userInfo,
+        jwt: token.jwt as string
+      };
 
       return session;
     }

@@ -5,6 +5,5 @@ CREATE TABLE class_exams (
     exam_id INT NOT NULL,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    FOREIGN KEY (class_id) REFERENCES classes(id),
     UNIQUE (class_id, exam_id)
 );

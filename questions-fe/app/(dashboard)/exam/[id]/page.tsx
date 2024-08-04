@@ -2,10 +2,11 @@
 
 import { getExamQuestions, GetExamQuestionsApi, submitAnswer } from '@/lib/api';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ExamPage() {
+  const router = useRouter();
   const { id } = useParams();
   const [questions, setQuestions] = useState<GetExamQuestionsApi[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -75,9 +76,11 @@ export default function ExamPage() {
       ))}
       <button
         className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        // onClick={handleSubmit}
+        onClick={() => {
+          router.push('/student-exams');
+        }}
       >
-        Submit Answers
+        Return to exam list
       </button>
     </div>
   );

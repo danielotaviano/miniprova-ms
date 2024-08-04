@@ -1,17 +1,6 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    _sqlx_migrations (version) {
-        version -> Int8,
-        description -> Text,
-        installed_on -> Timestamptz,
-        success -> Bool,
-        checksum -> Bytea,
-        execution_time -> Int8,
-    }
-}
-
-diesel::table! {
     answers (id) {
         id -> Int4,
         answer -> Varchar,
@@ -50,7 +39,6 @@ diesel::joinable!(exam_questions -> exams (exam_id));
 diesel::joinable!(exam_questions -> questions (question_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    _sqlx_migrations,
     answers,
     exam_questions,
     exams,
