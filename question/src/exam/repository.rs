@@ -143,7 +143,7 @@ pub fn update_questions_in_exam(exam_id: i32, question_ids: Vec<i32>) -> Result<
     });
 
     if result.is_err() {
-        println!("{:?}", result.err().unwrap());
+        
         return Err(ServiceError::InternalServerError);
     }
 

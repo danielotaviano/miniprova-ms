@@ -29,7 +29,7 @@ pub async fn create_class(
 
 pub async fn get_class_by_id(path: web::Path<i32>) -> impl Responder {
     let class_id = path.into_inner();
-    println!("get it {}", class_id);
+    
     match service::get_class_by_id(class_id) {
         Err(e) => return HttpResponse::from_error(e),
         Ok(class) => match class {
@@ -108,11 +108,11 @@ pub async fn list_classes_that_student_is_not_enrolled(req: HttpRequest) -> impl
 }
 
 pub async fn list_classes_by_teacher(req: HttpRequest) -> impl Responder {
-    println!("entrou aqui");
+    
     let ext = req.extensions();
     let user = ext.get::<LoggedUser>().unwrap();
 
-    println!("user: {:?}", user);
+    
 
     let classes = match service::list_classes_by_teacher(user.id) {
         Err(e) => return HttpResponse::from_error(e),

@@ -139,12 +139,12 @@ pub fn get_exam_results_as_teacher(
         "#,
     )
     .bind::<diesel::sql_types::Integer, _>(exam_id);
-    println!("asdasdasdasdasd13 {:?}", query);
+    
 
     let results: Vec<StudentQuestionAsTeacherResult> = query
         .get_results::<StudentQuestionAsTeacherResult>(&mut conn)
         .map_err(|e| {
-            println!("error: {:?}", e);
+            
             ServiceError::InternalServerError
         })?;
 
@@ -268,7 +268,7 @@ pub fn get_question_by_id(question_id: i32) -> Result<Option<GetStudentQuestionD
     .bind::<diesel::sql_types::Integer, _>(question_id);
 
     let results: Vec<Question> = query.get_results::<Question>(&mut conn).map_err(|e| {
-        println!("error: {:?}", e);
+        
         ServiceError::InternalServerError
     })?;
 
@@ -549,7 +549,7 @@ pub fn get_exam_by_id(exam_id: i32) -> Result<Option<ExamById>, ServiceError> {
     .bind::<diesel::sql_types::Integer, _>(exam_id);
 
     let results: ExamById = query.get_result::<ExamById>(&mut conn).map_err(|e| {
-        println!("error: {:?}", e);
+        
         ServiceError::InternalServerError
     })?;
 

@@ -19,7 +19,7 @@ impl DatabaseManager {
 
         *self.pool.lock().unwrap().deref_mut() = Some(pool);
 
-        println!("Database Connected");
+        
     }
 
     pub fn get_database(&self) -> PooledConnection<ConnectionManager<PgConnection>> {

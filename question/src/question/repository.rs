@@ -41,7 +41,7 @@ pub fn create_question(new_question: CreateQuestionInputDto) -> Result<(), Servi
     });
 
     if result.is_err() {
-        println!("{:?}", result.err().unwrap());
+        
         return Err(ServiceError::InternalServerError);
     }
 
@@ -90,14 +90,14 @@ pub fn delete_question_by_id(question_id: i32) -> Result<(), ServiceError> {
     diesel::delete(answers::table.filter(answers::question_id.eq(question_id)))
         .execute(&mut conn)
         .map_err(|e| {
-            println!("{:?}", e);
+            
             ServiceError::InternalServerError
         })?;
 
     diesel::delete(questions::table.filter(questions::id.eq(question_id)))
         .execute(&mut conn)
         .map_err(|e| {
-            println!("{:?}", e);
+            
             ServiceError::InternalServerError
         })?;
 

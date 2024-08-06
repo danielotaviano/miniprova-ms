@@ -45,10 +45,10 @@ pub async fn get_exam_results_as_teacher(
         return Err(ServiceError::BadRequest("Exam not found".to_string()));
     }
 
-    println!("asdasdasdasdasd13");
+    
 
     let results = repository::get_exam_results_as_teacher(exam_id)?;
-    println!("asdasdasdasdasd13");
+    
     let results: Vec<_> = results
         .iter()
         .map(|result| async {
@@ -126,11 +126,11 @@ pub async fn get_student_open_exams(
     user: &LoggedUser,
 ) -> Result<Vec<GetStudentOpenExamDto>, ServiceError> {
     let enrolled_classes = api::get_enrolled_classes(user.jwt.clone()).await?;
-    println!("eclasses {:?}", enrolled_classes);
+    
 
     let class_ids: Vec<_> = enrolled_classes.iter().map(|c| c.id).collect();
     let exam_ids = repository::get_classes_open_exams(class_ids)?;
-    println!("{:?}", exam_ids);
+    
 
     let exams: Vec<_> = exam_ids
         .iter()
@@ -158,14 +158,14 @@ pub fn submit_answer_to_question_in_exam(
     answer_id: i32,
 ) -> Result<(), ServiceError> {
     let exam = class::repository::get_class_exam(exam_id)?;
-    println!("exam {:?}", exam);
+    
 
     if exam.is_none() {
         return Err(ServiceError::BadRequest("Exam not found".to_string()));
     }
 
     let exam = exam.unwrap();
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     if exam.start_time > chrono::Utc::now().naive_utc() {
         return Err(ServiceError::BadRequest("Exam not started yet".to_string()));
@@ -174,24 +174,24 @@ pub fn submit_answer_to_question_in_exam(
     if exam.end_time < chrono::Utc::now().naive_utc() {
         return Err(ServiceError::BadRequest("Exam already ended".to_string()));
     }
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     let question = repository::get_question_by_id(question_id)?;
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     if question.is_none() {
         return Err(ServiceError::BadRequest("Question not found".to_string()));
     }
     let question = question.unwrap();
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     let answer = question.answers.iter().find(|a| a.id == answer_id);
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     if answer.is_none() {
         return Err(ServiceError::BadRequest("Answer not found".to_string()));
     }
-    println!("EAEAEAEAE CHEGUEI AQUI MALUCO");
+    
 
     repository::submit_answer_to_question_in_exam(exam_id, question_id, user_id, answer_id)?;
     Ok(())
@@ -201,9 +201,9 @@ pub async fn get_questions_as_student(
     exam_id: i32,
     user_id: i32,
 ) -> Result<Vec<GetStudentQuestionDto>, ServiceError> {
-    println!("Getting questions for exam {}", exam_id);
+    
     let exam = class::repository::get_class_exam(exam_id)?;
-    println!("{:?}", exam);
+    
 
     if exam.is_none() {
         return Err(ServiceError::NotFound);
@@ -219,7 +219,7 @@ pub async fn get_questions_as_student(
         ));
     }
 
-    println!("Getting questions for exam123123 {}", exam_id);
+    
 
     let questions = repository::get_student_questions(exam_id, user_id)?;
 

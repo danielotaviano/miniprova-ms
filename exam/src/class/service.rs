@@ -19,12 +19,12 @@ pub async fn add_exam_to_class(
         return Err(ServiceError::BadRequest("Class not found".to_string()));
     }
 
-    println!("123");
+    
 
     let api_exam = api::get_exam(exam.exam_id, user.jwt.clone()).await?;
-    println!("1234");
+    
     let questions = api::get_exam_questions(api_exam.id, user.jwt.clone()).await?;
-    println!("1235");
+    
 
     let formated_questions: Vec<ImportQuestion> = questions
         .iter()
@@ -37,7 +37,7 @@ pub async fn add_exam_to_class(
                 .collect(),
         })
         .collect();
-    println!("1236");
+    
 
     let db_exam_id = exam::repository::import_exam(
         NewExam {
@@ -45,9 +45,9 @@ pub async fn add_exam_to_class(
         },
         formated_questions,
     )?;
-    println!("1237");
+    
 
-    println!("db_examId {}", db_exam_id);
+    
 
     repository::add_exam_to_class(class_id, db_exam_id, exam.start_date, exam.end_date)?;
 

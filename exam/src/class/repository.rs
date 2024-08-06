@@ -23,7 +23,7 @@ pub fn add_exam_to_class(
         ))
         .execute(&mut conn)
         .map_err(|e| {
-            println!("Error: {:?}", e);
+            
             ServiceError::InternalServerError
         })?;
 
@@ -60,13 +60,13 @@ pub fn get_class_exam(exam_id: i32) -> Result<Option<ClassExamDto>, ServiceError
     )
     .bind::<diesel::sql_types::Integer, _>(exam_id);
 
-    println!("{:?}", query);
+    
     let class_exam: Option<ClassExam> = query
         .get_result(&mut conn)
         .optional()
         .map_err(|_| ServiceError::InternalServerError)?;
 
-    println!("{:?}", class_exam);
+    
 
     let class_exam = match class_exam {
         Some(ce) => {

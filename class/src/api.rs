@@ -78,7 +78,7 @@ pub async fn get_exam(exam_id: i32, user_jwt: String) -> Result<GetExamApi, Serv
         .send()
         .await;
 
-    println!("result:{:?}", user_result);
+    
 
     let response = match user_result {
         Ok(r) => r,
