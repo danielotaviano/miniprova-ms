@@ -662,15 +662,6 @@ export const addExamToClass = async (
     return false;
   }
 
-  console.log(
-    JSON.stringify({
-      exam_id: examId,
-      start_date: startDate,
-      end_date: endDate,
-      class_id: classId
-    })
-  );
-
   const res = await fetch(
     `${process.env.GATEWAY_URL}/exam/classes/${classId}/exams`,
     {
@@ -686,8 +677,6 @@ export const addExamToClass = async (
       })
     }
   );
-
-  console.log(res);
 
   return res.ok;
 };

@@ -7,12 +7,12 @@ WORKDIR /app
 # Copy the Cargo.toml and Cargo.lock files and download the dependencies
 COPY ./Cargo.toml .
 RUN echo "// dummy file" > dummy.rs
-RUN cargo build --lib
+RUN cargo build --lib --release
 
 COPY /src/ ./src
-RUN cargo build
+RUN cargo build --release
 
-RUN cp ./target/debug/exam /usr/local/bin/app
+RUN cp ./target/release/exam /usr/local/bin/app
 
 EXPOSE 3000
 

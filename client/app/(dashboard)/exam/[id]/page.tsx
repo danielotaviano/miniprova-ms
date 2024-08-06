@@ -29,7 +29,6 @@ export default function ExamPage() {
 
   useEffect(() => {
     getExamQuestions(Number(id)).then((data) => {
-      console.log('dataaaa', data);
       setQuestions(data);
 
       const selectedAnswers: Record<number, number> = {};

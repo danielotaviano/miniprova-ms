@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export async function User() {
+  const router = useRouter();
   let session = await auth();
   let user = session?.user;
 
@@ -40,6 +42,7 @@ export async function User() {
               <form
                 action={async () => {
                   await signOut();
+                  router.push('/login');
                 }}
               >
                 <button type="submit">Sign Out</button>

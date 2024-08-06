@@ -25,7 +25,6 @@ export function QuestionsTable({}: {}) {
   useEffect(() => {
     (async () => {
       getQuestions().then((questions) => {
-        console.log(questions);
         setQuestions(questions);
       });
     })();

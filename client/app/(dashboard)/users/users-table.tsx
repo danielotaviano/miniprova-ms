@@ -25,7 +25,6 @@ export function UsersTable({}: {}) {
   useEffect(() => {
     (async () => {
       getUsers().then((users) => {
-        console.log(users);
         setUsers(users);
       });
     })();

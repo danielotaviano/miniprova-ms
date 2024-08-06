@@ -64,9 +64,6 @@ export const { signIn, auth, signOut } = NextAuth({
       if (!res.ok) throw new Error('Failed to fetch user information');
       const userInfo: MeResponse = await res.json();
 
-      console.log('session.user', session.user);
-      console.log('userInfo', userInfo);
-
       session.user = {
         ...session.user,
         ...userInfo,
